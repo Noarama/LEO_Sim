@@ -1,10 +1,17 @@
 from sat import *
 import math
 import matplotlib.pyplot as plt
+import random as rnd
 
 ''' This program generates the topology model based on user input. 
 '''
 satellites = []
+
+def gen_bond_prob():
+    ''' This function returns a 0 or a 1 under a certain probability. 
+    Currently, the probability that two neighbouring satellites are connected is 1/2.
+    '''
+    return rnd.choice([0,1])
 
 def connect_satellites(l , n , m):
     ''' This function creates the adjacency matrix that defines the connection between satellites.
@@ -20,35 +27,39 @@ def connect_satellites(l , n , m):
     for i in range(len(satellites)):
         for j in range(len(satellites)):
 
-            if (i % n == 0):
-                pivot = i # The pivot is used to keep track of the destenation or parallel neighbour of the destination to ensue connections follow the correct direction.
+            if (gen_bond_prob() == 1): # This if condition is used to ensure connections happen under a certain probability.
 
-                if (i != n*m -1 and j == i + n):
-                    # If thi current satellite is not the destination, we need to have an inter-plane connection with the parallel neighbour. 
-                    connections[i][j] = 1 
+                if (i % n == 0):
+                    pivot = i # The pivot is used to keep track of the destenation or parallel neighbour of the destination to ensue connections follow the correct direction.
+
+                    if (i != n*m -1 and j == i + n):
+                        # If thi current satellite is not the destination, we need to have an inter-plane connection with the parallel neighbour. 
+                        connections[i][j] = 1 
 
 
-            elif (i-pivot <= l): # If the current satellite is within the specified distance from the destination satellite
-                if ( j == i -1 or j == i + n):
-                    # Connect to the neighbour along the plane that is closer to the destination, and connect to the parallel neighbour.
-                    connections[i][j] = 1
+                elif (i-pivot <= l): # If the current satellite is within the specified distance from the destination satellite
+                    if ( j == i -1 or j == i + n):
+                        # Connect to the neighbour along the plane that is closer to the destination, and connect to the parallel neighbour.
+                        connections[i][j] = 1
 
-            elif (i-pivot == l+1):
-                # If the current satellite corresponds to the source or a parallel satellite to the source.
-                connections[i][i+1] = 1
-                connections[i][i-1] = 1
-                if (j == i+n):
-                    connections[i][j] = 1
-            
-            elif (i == pivot + n - 1) :
-                # If the current satellite corresponds to the last satellite along the current plane
-                connections[i][pivot] = 1
-                if (j == i+n):
-                    connections[i][j] = 1
+                elif (i-pivot == l+1):
+                    # If the current satellite corresponds to the source or a parallel satellite to the source.
+                    connections[i][i+1] = 1
+                    connections[i][i-1] = 1
+                    if (j == i+n):
+                        connections[i][j] = 1
+                
+                elif (i == pivot + n - 1) :
+                    # If the current satellite corresponds to the last satellite along the current plane
+                    connections[i][pivot] = 1
+                    if (j == i+n):
+                        connections[i][j] = 1
 
-            elif( j == i + 1 or j == i + n):
-                    # Connect to the neighbour along the plane that is closer to the destination, and connect to the parallel neighbour.
-                    connections[i][j] = 1
+                elif( j == i + 1 or j == i + n):
+                        # Connect to the neighbour along the plane that is closer to the destination, and connect to the parallel neighbour.
+                        connections[i][j] = 1
+            else:
+                continue # This is when the gen_bond_prob returns 0, indicating the current two satellites are disconnected.
 
     return connections
 
@@ -106,7 +117,7 @@ def plot_topology(connections, m,l,n):
     y_vals = [sat.y for sat in satellites]
     z_vals = [sat.z for sat in satellites]
 
-    labels = ["" for i in range(len(satellites)) ]
+    labels = [f'sat {i}' for i in range(len(satellites)) ]
     labels[l+1] = "SRC"
     if (m == 1):
         labels[0] = "DST"
@@ -127,18 +138,26 @@ def plot_topology(connections, m,l,n):
     plt.show()
 
 def main():
-    n, m, l = init_sim() # Collect network variables that defines the topology from the
+    # n, m, l = init_sim() # Collect network variables that defines the topology from the
+
+    n = 7
+    m = 2
+    l = 2
 
     # Generate n satellites along each of the m planes:
     for i in range(m):
         generate_topology(n, i)
     
     connections = connect_satellites(l , n, m) # Establish appropriate connections between the satellites in the network.
+    # print((m-1)*n + l + 1)
+    connections[l+1][(m-1)*n + l + 1] = 0 # Entry corresponding to edge S
+    connections[0][(m-1)*n] = 0 # Entry corresponding to edge D
+
     print(m, n )
     plot_topology(connections, m, l, n) # Visualize the topology of the network. 
 
-    
-    
+
+
 
 if __name__ == '__main__':
     main()
