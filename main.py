@@ -1,18 +1,19 @@
 from sat import *
 import math
-import plotly.graph_objects as go
-# We let n be the number of satellies along a single orbital plane.
-# We also let the radius of the orbital plane be 1 for simplicity. 
+import matplotlib.pyplot as plt
+
+''' This program generates the topology model based on user input. 
+'''
 satellites = []
 
-
-def inter_plane_connections():
-    return
-
-
-
 def connect_satellites(l , n , m):
-
+    ''' This function creates the adjacency matrix that defines the connection between satellites.
+    The function uses:
+    l - the number of satellites from the left of the source satellite to the destination satellite, 
+    n - the number of satellites along a single orbital plane,
+    m - the number of orbital planes.
+    The function returns the adjacency matrix called connections.
+    '''
     connections = [[0 for _ in range(len(satellites))] for _ in range(len(satellites))] # Create an adjacency matrix of the appropriate size. 
     pivot = 0
 
@@ -20,7 +21,8 @@ def connect_satellites(l , n , m):
         for j in range(len(satellites)):
 
             if (i % n == 0):
-                pivot = i
+                pivot = i # The pivot is used to keep track of the destenation or parallel neighbour of the destination to ensue connections follow the correct direction.
+
                 if (i != n*m -1 and j == i + n):
                     # If thi current satellite is not the destination, we need to have an inter-plane connection with the parallel neighbour. 
                     connections[i][j] = 1 
@@ -50,9 +52,13 @@ def connect_satellites(l , n , m):
 
     return connections
 
-
-
 def generate_topology(n, m):
+    ''' This function generates satellites appropriately in a circular arrangement.
+    The function uses:
+    n - the number of satellites along a single orbital plane,
+    m - the number of orbital planes.
+    '''
+
     if (n <= 0):
         print("Error: n must be larger than 0.")
         return
@@ -65,18 +71,72 @@ def generate_topology(n, m):
         temp_sat = Sat(i+(n*m),math.cos(math.radians(i*deg_inc)),math.sin(math.radians(i*deg_inc)),m)
         satellites.append(temp_sat)
 
+def init_sim():
+    ''' This function kicks off the program by prompting the user to enter desired variables that define the network's topology.
+    The collected information is:
+    l - the number of satellites from the left of the source satellite to the destination satellite, 
+    n - the number of satellites along a single orbital plane,
+    m - the number of orbital planes.
+    These are all returned.
+    '''
+    n = int( input("Enter number of satellites along a single orbital plane: "))
+    m = int( input("Enter number of orbital planes: "))
+    r = int( input("Enter number of satellites on the left from the source to the destination: ") )
+    return n, m, r
+
+def plot_topology(connections, m,l,n):
+    ''' This function is responsible for the visualization of the network topology. 
+    The function uses:
+    connections - the adjecancy matrix containing the directed edges between satellites,
+    m - the number of orbital planes to define axis limits,
+    satellites -  a global list containing Sat instances that describe the satellites in the network. 
+    The function outputs a plot.
+    '''
+    # Set up:
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_xlim(-2, 2)
+    ax.set_ylim(-2, 2)
+    ax.set_zlim(0, m+1)
+    ax.set_axis_off()
+    ax.dist = 6
+
+    # Plotting satellites: (as a scatter plot)
+    x_vals = [sat.x for sat in satellites]
+    y_vals = [sat.y for sat in satellites]
+    z_vals = [sat.z for sat in satellites]
+
+    labels = ["" for i in range(len(satellites)) ]
+    labels[l+1] = "SRC"
+    if (m == 1):
+        labels[0] = "DST"
+    else:
+        labels[(m-1)*n] = "DST"
+
+    ax.scatter(x_vals, y_vals, z_vals)
+    for x, y, z, label in zip(x_vals, y_vals, z_vals, labels):
+        ax.text(x, y, z, label, fontsize=10, color='black')
+
+    # Plotting connections: (as vectors)
+    for i in range(len(satellites)):
+        for j in range(len(satellites)):
+
+            if (connections[i][j] == 1):
+                ax.quiver(satellites[i].x, satellites[i].y, satellites[i].z, satellites[j].x -satellites[i].x, satellites[j].y -satellites[i].y, satellites[j].z -satellites[i].z)
+    
+    plt.show()
 
 def main():
-    n, m, l = init_sim()
-    planes = []
-    for i in range(m):
-        plane = generate_topology(n, i)
-    
-    for sat in satellites:
-        sat.print_sat()
+    n, m, l = init_sim() # Collect network variables that defines the topology from the
 
-    connections = connect_satellites(l , n, m)
-    plot_graph_3d(satellites, connections)
+    # Generate n satellites along each of the m planes:
+    for i in range(m):
+        generate_topology(n, i)
+    
+    connections = connect_satellites(l , n, m) # Establish appropriate connections between the satellites in the network.
+    print(m, n )
+    plot_topology(connections, m, l, n) # Visualize the topology of the network. 
+
     
     
 
