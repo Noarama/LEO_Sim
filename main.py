@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import random as rnd
 import numpy as np
 
-# np.random.seed(123)
-REP = 15000
+
+REP = 15000 # This variable indicates how many repetition for each n value. 
 
 def gen_bond_prob():
     ''' This function returns a 0 or a 1 under a certain probability. 
@@ -180,12 +180,13 @@ def traverse_topology(connections, n,m,l):
     else:
         return 0
 
-def main():
-
-    # Below are variables that define the topology
-    ns = [4,5,6,7,8,9]
-    m = 1
-    l = 1
+def one_d_results(ns,l):
+    ''' This function is responsible for outputting the graph comparison of the theory and simulation for 
+    message propogation along a single orbital plane, i.e., when m=1.
+    The function uses:
+    ns - a list containing the size of the orbital planes,
+    l - the number of satellites from the left of the source satellite to the destination satellite.
+    '''
 
     results = [] # This list holds the resulting probabilities
     theory = []
@@ -199,9 +200,9 @@ def main():
 
         for _ in range(REP):
             satellites = []
-            generate_topology(n, m)
-            connections = connect_satellites(l , n, m) # Establish appropriate connections between the satellites in the network.
-            values += traverse_topology(connections, n,m,l)
+            generate_topology(n, 1)
+            connections = connect_satellites(l , n, 1) # Establish appropriate connections between the satellites in the network.
+            values += traverse_topology(connections, n,1,l)
         
         results.append(values/REP)
         theory.append((1/2)**(l) + (1/2)**(n-l) - (1/2)**n)
@@ -215,7 +216,22 @@ def main():
     plt.ylabel("Message Delivery Probability")
     plt.title("Message Delivery Probability vs. Distance")
     plt.show()
+
+def two_d_results(ns):
+    return None
+
+def main():
+
+    # Below are variables that define the topology
+    ns = [4,5,6,7,8,9]
+    m = 1
+    l = 1
+
+    if(m == 1):
+        one_d_results(ns, l)
     
+    elif(m == 2):
+        two_d_results(ns)
 
         
 if __name__ == '__main__':
