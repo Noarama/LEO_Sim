@@ -22,7 +22,8 @@ def connect_satellites(l , n , m):
     The function returns the adjacency matrix called connections.
     '''
     connections = [[0 for _ in range(len(satellites))] for _ in range(len(satellites))] # Create an adjacency matrix of the appropriate size. 
-    pivot = 0
+    pivot = 0 # The pivot is used to keep track of the destenation or parallel neighbour of the destination to ensue connections follow the correct direction.
+
 
     for i in range(len(satellites)):
         for j in range(len(satellites)):
@@ -30,8 +31,7 @@ def connect_satellites(l , n , m):
             if (gen_bond_prob() == 1): # This if condition is used to ensure connections happen under a certain probability.
 
                 if (i % n == 0):
-                    pivot = i # The pivot is used to keep track of the destenation or parallel neighbour of the destination to ensue connections follow the correct direction.
-
+                    pivot = i 
                     if (i != n*m -1 and j == i + n):
                         # If thi current satellite is not the destination, we need to have an inter-plane connection with the parallel neighbour. 
                         connections[i][j] = 1 
@@ -117,12 +117,13 @@ def plot_topology(connections, m,l,n):
     y_vals = [sat.y for sat in satellites]
     z_vals = [sat.z for sat in satellites]
 
-    labels = [f'sat {i}' for i in range(len(satellites)) ]
+    labels = ["" for i in range(len(satellites)) ]
     labels[l+1] = "SRC"
-    if (m == 1):
-        labels[0] = "DST"
-    else:
-        labels[(m-1)*n] = "DST"
+    # if (m == 1):
+    #     labels[0] = "DST"
+    # else:
+    #     labels[(m-1)*n] = "DST"
+    labels[(m-1)*n] = "DST"
 
     ax.scatter(x_vals, y_vals, z_vals)
     for x, y, z, label in zip(x_vals, y_vals, z_vals, labels):
@@ -137,25 +138,60 @@ def plot_topology(connections, m,l,n):
     
     plt.show()
 
-def main():
-    # n, m, l = init_sim() # Collect network variables that defines the topology from the
+def dfs_rec(connections, src, dst, visited):
+    ''' This function is the implementation of the depth first seach graph traversal algorithm
+    The function uses:
+    connections - the adjacency matrix of the graph,
+    src - the current satellite we are in. Initially this is the source satellite, 
+    dst - the index of the destination satellite,
+    visited - a list that keeps track of which satellites have been visited.
+    '''
 
-    n = 7
+    visited[src] = True
+
+    for i in range(len(connections[src])): 
+        if ((connections[src][i] == 1) and visited[i] == False):
+            dfs_rec(connections, i, dst, visited)
+     
+def traverse_topology(connections, n,m,l):
+    ''' This function initializes the traversal of the topology from the source to the destination satellite.
+    The function uses:
+    connection - the adjacency matrix,
+    n - the number of satellites along a single orbital plane,
+    m - the number of orbital planes in the current topology'
+    l - the number of satellites from the left of the source satellite to the destination satellite.
+    '''
+    # The indecies that store the source and desteniation satellites.
+    src = l+1
+    dst = (m-1)*n
+
+    visited = [False for _ in range(len(satellites))] # Initialize a visited list where all values are false. 
+    dfs_rec(connections, src, dst, visited)
+
+    return visited[dst]
+
+def main():
+    
+    n = 5
     m = 2
     l = 2
+
+    # Uncomment the line below to make the program user interactive
+    # n, m, l = init_sim() # Collect network variables that defines the topology from the user
 
     # Generate n satellites along each of the m planes:
     for i in range(m):
         generate_topology(n, i)
     
     connections = connect_satellites(l , n, m) # Establish appropriate connections between the satellites in the network.
-    # print((m-1)*n + l + 1)
-    connections[l+1][(m-1)*n + l + 1] = 0 # Entry corresponding to edge S
-    connections[0][(m-1)*n] = 0 # Entry corresponding to edge D
 
-    print(m, n )
+    # The following two lines dictate the status of the edges S and D.
+    # connections[l+1][(m-1)*n + l + 1] = 0 # Entry corresponding to edge S
+    # connections[0][(m-1)*n] = 0 # Entry corresponding to edge D
+
+    print(traverse_topology(connections, n, m, l))
+
     plot_topology(connections, m, l, n) # Visualize the topology of the network. 
-
 
 
 
