@@ -217,21 +217,47 @@ def one_d_results(ns,l):
     plt.title("Message Delivery Probability vs. Distance")
     plt.show()
 
-def two_d_results(ns):
-    return None
+def multi_d_results(ns, m, l):
+
+    results = [] # This list holds the resulting probabilities
+    theory = []
+    global satellites
+    satellites = []
+    values = 0
+
+    for n in ns:
+        values = 0
+        for _ in range(REP):
+            satellites = []
+
+            for i in range(m):
+                generate_topology(n, i)
+
+            connections = connect_satellites(l , n, m) # Establish appropriate connections between the satellites in the network.
+            values += traverse_topology(connections, n,m,l)
+        
+        results.append(values/REP)
+
+
+    plt.figure(figsize=(8, 5))
+    plt.plot(ns, results, marker = 'o')
+    plt.ylim(0, 1)
+    plt.xlabel("Number of Satellites Along a Plane")
+    plt.ylabel("Message Delivery Probability")
+    plt.show()
 
 def main():
 
     # Below are variables that define the topology
-    ns = [4,5,6,7,8,9]
-    m = 1
-    l = 1
+    ns = [5,6,7,8,9]
+    m = 2
+    l = 2
 
     if(m == 1):
         one_d_results(ns, l)
     
-    elif(m == 2):
-        two_d_results(ns)
+    else:
+        multi_d_results(ns, l,m)
 
         
 if __name__ == '__main__':
