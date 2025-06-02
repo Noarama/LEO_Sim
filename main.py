@@ -2,10 +2,10 @@ from sat import *
 import math
 import matplotlib.pyplot as plt
 import random as rnd
+import numpy as np
 
-''' This program generates the topology model based on user input. 
-'''
-satellites = []
+# np.random.seed(123)
+REP = 15000
 
 def gen_bond_prob():
     ''' This function returns a 0 or a 1 under a certain probability. 
@@ -28,7 +28,7 @@ def connect_satellites(l , n , m):
     for i in range(len(satellites)):
         for j in range(len(satellites)):
 
-            if (gen_bond_prob() == 1): # This if condition is used to ensure connections happen under a certain probability.
+            if (gen_bond_prob() != 0): # This if condition is used to ensure connections happen under a certain probability.
 
                 if (i % n == 0):
                     pivot = i 
@@ -44,8 +44,13 @@ def connect_satellites(l , n , m):
 
                 elif (i-pivot == l+1):
                     # If the current satellite corresponds to the source or a parallel satellite to the source.
-                    connections[i][i+1] = 1
-                    connections[i][i-1] = 1
+                    if(n == 3):
+                        connections[i][0] = 1
+                        connections[i][i-1] = 1
+                    else:
+                        connections[i][i+1] = 1
+                        connections[i][i-1] = 1
+                    
                     if (j == i+n):
                         connections[i][j] = 1
                 
@@ -69,7 +74,7 @@ def generate_topology(n, m):
     n - the number of satellites along a single orbital plane,
     m - the number of orbital planes.
     '''
-
+    global satellites
     if (n <= 0):
         print("Error: n must be larger than 0.")
         return
@@ -119,11 +124,11 @@ def plot_topology(connections, m,l,n):
 
     labels = ["" for i in range(len(satellites)) ]
     labels[l+1] = "SRC"
-    # if (m == 1):
-    #     labels[0] = "DST"
-    # else:
-    #     labels[(m-1)*n] = "DST"
-    labels[(m-1)*n] = "DST"
+    if (m == 1):
+        labels[0] = "DST"
+    else:
+        labels[(m-1)*n] = "DST"
+    # labels[(m-1)*n] = "DST"
 
     ax.scatter(x_vals, y_vals, z_vals)
     for x, y, z, label in zip(x_vals, y_vals, z_vals, labels):
@@ -148,10 +153,11 @@ def dfs_rec(connections, src, dst, visited):
     '''
 
     visited[src] = True
-
+    if (src == dst):
+        return True
     for i in range(len(connections[src])): 
         if ((connections[src][i] == 1) and visited[i] == False):
-            dfs_rec(connections, i, dst, visited)
+            return dfs_rec(connections, i, dst, visited)
      
 def traverse_topology(connections, n,m,l):
     ''' This function initializes the traversal of the topology from the source to the destination satellite.
@@ -168,32 +174,49 @@ def traverse_topology(connections, n,m,l):
     visited = [False for _ in range(len(satellites))] # Initialize a visited list where all values are false. 
     dfs_rec(connections, src, dst, visited)
 
-    return visited[dst]
+    if visited[dst]:
+        return 1
+    
+    else:
+        return 0
 
 def main():
+
+    # Below are variables that define the topology
+    ns = [4,5,6,7,8,9]
+    m = 1
+    l = 1
+
+    results = [] # This list holds the resulting probabilities
+    theory = []
+    global satellites
+    satellites = []
+    values = 0
+
+    for n in ns:
+
+        values = 0
+
+        for _ in range(REP):
+            satellites = []
+            generate_topology(n, m)
+            connections = connect_satellites(l , n, m) # Establish appropriate connections between the satellites in the network.
+            values += traverse_topology(connections, n,m,l)
+        
+        results.append(values/REP)
+        theory.append((1/2)**(l) + (1/2)**(n-l) - (1/2)**n)
+
+
+    plt.figure(figsize=(8, 5))
+    plt.plot(ns, results, marker = 'o')
+    plt.plot(ns, theory, marker = 'x')
+    plt.ylim(0, 1)
+    plt.xlabel("Number of Satellites Along a Plane")
+    plt.ylabel("Message Delivery Probability")
+    plt.title("Message Delivery Probability vs. Distance")
+    plt.show()
     
-    n = 5
-    m = 2
-    l = 2
 
-    # Uncomment the line below to make the program user interactive
-    # n, m, l = init_sim() # Collect network variables that defines the topology from the user
-
-    # Generate n satellites along each of the m planes:
-    for i in range(m):
-        generate_topology(n, i)
-    
-    connections = connect_satellites(l , n, m) # Establish appropriate connections between the satellites in the network.
-
-    # The following two lines dictate the status of the edges S and D.
-    # connections[l+1][(m-1)*n + l + 1] = 0 # Entry corresponding to edge S
-    # connections[0][(m-1)*n] = 0 # Entry corresponding to edge D
-
-    print(traverse_topology(connections, n, m, l))
-
-    plot_topology(connections, m, l, n) # Visualize the topology of the network. 
-
-
-
+        
 if __name__ == '__main__':
     main()
