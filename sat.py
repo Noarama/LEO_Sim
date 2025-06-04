@@ -9,3 +9,5 @@ class Sat:
     def print_sat(self):
         print("Satellite:" , self.sat_num , ": (" , self.x, ",", self.y, ",", self.z, ")")
 
+
+
