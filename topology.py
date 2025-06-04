@@ -1,7 +1,18 @@
-from sat import *
+# from sat import *
 import math
 import matplotlib.pyplot as plt
 import random as rnd
+
+class Sat:
+
+    def __init__(self, sat_num, x, y, z):
+        self.sat_num = sat_num
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def print_sat(self):
+        print("Satellite:" , self.sat_num , ": (" , self.x, ",", self.y, ",", self.z, ")")
 
 class Topology:
     satellites = []
@@ -20,10 +31,11 @@ class Topology:
         self.n = n
         self.m = m
         self.d = d
-
+        self.satellites = []
+        self.connections = []
         self.add_satellites(self.n, self.m)
 
-        self.connect_satellites()
+        self.connect_sats()
 
     def print_topology(self): 
         '''This function is a helper function that prints the attributes of the topology.'''
@@ -78,11 +90,33 @@ class Topology:
             if(self.gen_bond_prob() != 0):
                 self.connections[sat][sat + self.n] = 1
     
+
+    def connect_sats(self):
+        self.connections = [[0 for _ in range(len(self.satellites))] for _ in range(len(self.satellites))]
+        plane = -1
+
+        for sat in range(len(self.connections)):
+            if(self.gen_bond_prob() != 0):
+                if (sat % self.n == 0):
+                    plane += 1
+                    self.connections[sat][sat+1] = 1
+                    self.connections[sat][sat + self.n -1] = 1
+                
+                elif (sat < (plane * self.n + self.d)):
+                    self.connections[sat][sat+1] = 1
+
+                elif(sat > (plane * self.n + self.d)):
+                    self.connections[sat][sat-1] = 1
+
+                if(sat < (self.m-1) * self.n):
+                    self.connections[sat][sat+self.n] = 1
+
+
     def gen_bond_prob(self):
         ''' This function returns a 0 or a 1 under a certain probability. 
         Currently, the probability that two neighbouring satellites are connected is 1/2.
         '''
-        return rnd.choice([0,1])
+        return rnd.choice([0,1,2,3,4,5,6])
     
     def plot_topology(self):
         ''' This function plots the topology as a directed graph.'''
@@ -100,7 +134,7 @@ class Topology:
         y_vals = [sat.y for sat in self.satellites]
         z_vals = [sat.z for sat in self.satellites]
 
-        labels = [f"" for i in range(len(self.satellites)) ]
+        labels = [f"sat {i}" for i in range(len(self.satellites)) ]
         labels[0] = "SRC"
         
         labels[self.n *(self.m-1) + self.d] = "DST"

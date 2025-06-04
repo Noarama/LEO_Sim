@@ -1,4 +1,4 @@
-from sat import *
+# from sat import *
 from topology import *
 import math
 import matplotlib.pyplot as plt
@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-REP = 150 # This variable indicates how many repetition for each n value. 
+REP = 500 # This variable indicates how many repetition for each n value. 
 
 def dfs_rec(connections, src, dst, visited):
     ''' This function is the implementation of the depth first seach graph traversal algorithm
@@ -40,94 +40,68 @@ def traverse_topology(topology):
     else:
         return 0
 
-def one_d_results(ns,l):
-    ''' This function is responsible for outputting the graph comparison of the theory and simulation for 
-    message propogation along a single orbital plane, i.e., when m=1.
-    The function uses:
-    ns - a list containing the size of the orbital planes,
-    l - the number of satellites from the left of the source satellite to the destination satellite.
-    '''
+def one_d_sim(n_vals,m):
 
-    results = [] # This list holds the resulting probabilities
-    theory = []
-    global satellites
-    satellites = []
+    p = 5/6
     values = 0
-
-    for n in ns:
-
-        values = 0
-
-        for _ in range(REP):
-            satellites = []
-            generate_topology(n, 1)
-            connections = connect_satellites(l , n, 1) # Establish appropriate connections between the satellites in the network.
-            values += traverse_topology(connections, n,1,l)
-        
-        results.append(values/REP)
-        theory.append((1/2)**(l) + (1/2)**(n-l) - (1/2)**n)
-
-
-    plt.figure(figsize=(8, 5))
-    plt.plot(ns, results, marker = 'o')
-    plt.plot(ns, theory, marker = 'x')
-    plt.ylim(0, 1)
-    plt.xlabel("Number of Satellites Along a Plane")
-    plt.ylabel("Message Delivery Probability")
-    plt.title("Message Delivery Probability vs. Distance")
-    plt.show()
-
-def multi_d_results(ns, m, l):
-
-    results = [] # This list holds the resulting probabilities
+    results = []
     theory = []
-    global satellites
-    satellites = []
-    values = 0
 
-    for n in ns:
+    for n in n_vals:
+        d = int(n/3)
         values = 0
         for _ in range(REP):
-            satellites = []
+            top = Topology(n,m,d)
+            values += traverse_topology(top)
 
-            for i in range(m):
-                generate_topology(n, i)
-
-            connections = connect_satellites(l , n, m) # Establish appropriate connections between the satellites in the network.
-            values += traverse_topology(connections, n,m,l)
-        
         results.append(values/REP)
-
+        theory.append((p**d) + (p**(n-d)) - (p**n))
 
     plt.figure(figsize=(8, 5))
-    plt.plot(ns, results, marker = 'o')
+    plt.plot(n_vals, results, marker = 'o', label ='Simulation Results')
+    plt.plot(n_vals, theory, marker = 'x', label = 'Theoretical Results')
+
     plt.ylim(0, 1)
+    plt.legend()
     plt.xlabel("Number of Satellites Along a Plane")
     plt.ylabel("Message Delivery Probability")
+    plt.title("1D Message Delivery Probability vs. Number of Satellites Along a Plane")
     plt.show()
 
-def main():
+def multi_d_sim(n_vals,m):
 
-    n_vals = [3,4,5,6,7]
     values = 0
     results = []
 
     for n in n_vals:
+        d = int(n/2)
         values = 0
         for _ in range(REP):
-            top = Topology(n,1,2)
+            top = Topology(n,m,d)
             values += traverse_topology(top)
 
         results.append(values/REP)
 
     plt.figure(figsize=(8, 5))
-    plt.plot(n_vals, results, marker = 'o')
+    plt.plot(n_vals, results, marker = 'o', label ='Simulation Results')
 
     plt.ylim(0, 1)
+    plt.legend()
     plt.xlabel("Number of Satellites Along a Plane")
     plt.ylabel("Message Delivery Probability")
-    plt.title("Message Delivery Probability vs. Distance")
+    plt.title("2D Message Delivery Probability vs. Number of Satellites Along a Plane")
     plt.show()
+
+def main():
+
+    # These varaibles are for the simulation
+    n_vals = [3,6,9,12,16,20,30,40,45,50,55,60]
+    m = 1
+
+    # Simulations:
+    one_d_sim(n_vals, 1)
+    multi_d_sim(n_vals, 2)
+    
 
         
 if __name__ == '__main__':
