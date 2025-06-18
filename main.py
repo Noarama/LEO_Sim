@@ -1,144 +1,125 @@
-from sat import *
+# from sat import *
+from topology import *
 import math
 import matplotlib.pyplot as plt
 
-''' This program generates the topology model based on user input. 
-'''
-satellites = []
+import numpy as np
 
-def connect_satellites(l , n , m):
-    ''' This function creates the adjacency matrix that defines the connection between satellites.
+
+REP = 5000 # This variable indicates how many repetition for each n value. 
+
+def dfs_rec(connections, src, dst, visited):
+    ''' This function is the implementation of the depth first seach graph traversal algorithm
     The function uses:
-    l - the number of satellites from the left of the source satellite to the destination satellite, 
-    n - the number of satellites along a single orbital plane,
-    m - the number of orbital planes.
-    The function returns the adjacency matrix called connections.
-    '''
-    connections = [[0 for _ in range(len(satellites))] for _ in range(len(satellites))] # Create an adjacency matrix of the appropriate size. 
-    pivot = 0
-
-    for i in range(len(satellites)):
-        for j in range(len(satellites)):
-
-            if (i % n == 0):
-                pivot = i # The pivot is used to keep track of the destenation or parallel neighbour of the destination to ensue connections follow the correct direction.
-
-                if (i != n*m -1 and j == i + n):
-                    # If thi current satellite is not the destination, we need to have an inter-plane connection with the parallel neighbour. 
-                    connections[i][j] = 1 
-
-
-            elif (i-pivot <= l): # If the current satellite is within the specified distance from the destination satellite
-                if ( j == i -1 or j == i + n):
-                    # Connect to the neighbour along the plane that is closer to the destination, and connect to the parallel neighbour.
-                    connections[i][j] = 1
-
-            elif (i-pivot == l+1):
-                # If the current satellite corresponds to the source or a parallel satellite to the source.
-                connections[i][i+1] = 1
-                connections[i][i-1] = 1
-                if (j == i+n):
-                    connections[i][j] = 1
-            
-            elif (i == pivot + n - 1) :
-                # If the current satellite corresponds to the last satellite along the current plane
-                connections[i][pivot] = 1
-                if (j == i+n):
-                    connections[i][j] = 1
-
-            elif( j == i + 1 or j == i + n):
-                    # Connect to the neighbour along the plane that is closer to the destination, and connect to the parallel neighbour.
-                    connections[i][j] = 1
-
-    return connections
-
-def generate_topology(n, m):
-    ''' This function generates satellites appropriately in a circular arrangement.
-    The function uses:
-    n - the number of satellites along a single orbital plane,
-    m - the number of orbital planes.
+    connections - the adjacency matrix of the graph,
+    src - the current satellite we are in. Initially this is the source satellite, 
+    dst - the index of the destination satellite,
+    visited - a list that keeps track of which satellites have been visited.
     '''
 
-    if (n <= 0):
-        print("Error: n must be larger than 0.")
-        return
+    visited[src] = True
+    if (src == dst):
+        return True
+    for i in range(len(connections[src])): 
+        if ((connections[src][i] == 1) and visited[i] == False):
+            return dfs_rec(connections, i, dst, visited)
+     
+def traverse_topology(topology):
+    ''' This function initializes the traversal of the topology from the source to the destination satellite.
+    The function uses:
+    topology - An object containing all the information needed to generate this instance of the topology.
+    '''
+    # The indecies that store the source and desteniation satellites.
+    con_list = topology.connections
+    visited = [False for _ in range(len(topology.satellites))] # Initialize a visited list where all values are false. 
+    dfs_rec(con_list, 0, topology.n *(topology.m-1) + topology.d, visited)
+
+    if visited[topology.n *(topology.m-1) + topology.d]:
+        return 1
     
-    deg_inc = 360/n # Calculate the angle increment based on n.
-
-
-    # Asigning each satellite coordinates along a circle using polar to rectangular conversion. 
-    for i in range(n):
-        temp_sat = Sat(i+(n*m),math.cos(math.radians(i*deg_inc)),math.sin(math.radians(i*deg_inc)),m)
-        satellites.append(temp_sat)
-
-def init_sim():
-    ''' This function kicks off the program by prompting the user to enter desired variables that define the network's topology.
-    The collected information is:
-    l - the number of satellites from the left of the source satellite to the destination satellite, 
-    n - the number of satellites along a single orbital plane,
-    m - the number of orbital planes.
-    These are all returned.
-    '''
-    n = int( input("Enter number of satellites along a single orbital plane: "))
-    m = int( input("Enter number of orbital planes: "))
-    r = int( input("Enter number of satellites on the left from the source to the destination: ") )
-    return n, m, r
-
-def plot_topology(connections, m,l,n):
-    ''' This function is responsible for the visualization of the network topology. 
-    The function uses:
-    connections - the adjecancy matrix containing the directed edges between satellites,
-    m - the number of orbital planes to define axis limits,
-    satellites -  a global list containing Sat instances that describe the satellites in the network. 
-    The function outputs a plot.
-    '''
-    # Set up:
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.set_xlim(-2, 2)
-    ax.set_ylim(-2, 2)
-    ax.set_zlim(0, m+1)
-    ax.set_axis_off()
-    ax.dist = 6
-
-    # Plotting satellites: (as a scatter plot)
-    x_vals = [sat.x for sat in satellites]
-    y_vals = [sat.y for sat in satellites]
-    z_vals = [sat.z for sat in satellites]
-
-    labels = ["" for i in range(len(satellites)) ]
-    labels[l+1] = "SRC"
-    if (m == 1):
-        labels[0] = "DST"
     else:
-        labels[(m-1)*n] = "DST"
+        return 0
 
-    ax.scatter(x_vals, y_vals, z_vals)
-    for x, y, z, label in zip(x_vals, y_vals, z_vals, labels):
-        ax.text(x, y, z, label, fontsize=10, color='black')
+def one_d_sim(n_vals):
+    ''' This function is used to generate the plots for the 1D case (message propagation along a single orbital plane).
+    This function uses:
+    n_vals - a list containing all the different values for the number of satellites along a single orbital plane.
+    '''
 
-    # Plotting connections: (as vectors)
-    for i in range(len(satellites)):
-        for j in range(len(satellites)):
+    p = 8/9 # The value of the probability of each ISL being connected. This value is according to topology.gen_bond_prob()
+    d_vals = [2] # A list containing the values of d, the distance between the source and destination satellites.
 
-            if (connections[i][j] == 1):
-                ax.quiver(satellites[i].x, satellites[i].y, satellites[i].z, satellites[j].x -satellites[i].x, satellites[j].y -satellites[i].y, satellites[j].z -satellites[i].z)
+    # The variables to hold results:
+    values = 0
+    results = []
+    theory = []
+
+    plt.figure(figsize=(8, 5))
+
+    for val in d_vals:
+        for n in n_vals:
+            d = int(n/val)
+            values = 0
+            for _ in range(REP):
+                top = Topology(n,1,d)
+                values += traverse_topology(top)
+
+            results.append(values/REP)
+            theory.append((p**d) + (p**(n-d)) - (p**n))
+
+        
+        plt.plot(n_vals, results, marker = 'o', label =f'Simulation Results, d = n/{val}')
+        plt.plot(n_vals, theory, marker = 'x', label = f'Theoretical Results, d = n/{val}')
+        results = []
+        theory = []
+
     
+    plt.ylim(0, 1)
+    plt.legend()
+    plt.xlabel("Number of Satellites Along a Plane")
+    plt.ylabel("Message Delivery Probability")
+    plt.title("1D Message Delivery Probability vs. Number of Satellites Along a Plane")
+    plt.show()
+
+def multi_d_sim(n_vals):
+    ''' This function is used to generate the plots for the 2D case (message propagation along a two orbital planes).
+    This function uses:
+    n_vals - a list containing all the different values for the number of satellites along a single orbital plane.
+    '''
+
+    values = 0
+    results = []
+
+    for n in n_vals:
+        d = int(n/2)
+        values = 0
+        for _ in range(REP):
+            top = Topology(n,2,d)
+            values += traverse_topology(top)
+
+        results.append(values/REP)
+
+    plt.figure(figsize=(8, 5))
+    plt.plot(n_vals, results, marker = 'o', label ='Simulation Results')
+
+    plt.ylim(0, 1)
+    plt.legend()
+    plt.xlabel("Number of Satellites Along a Plane")
+    plt.ylabel("Message Delivery Probability")
+    plt.title("2D Message Delivery Probability vs. Number of Satellites Along a Plane")
     plt.show()
 
 def main():
-    n, m, l = init_sim() # Collect network variables that defines the topology from the
 
-    # Generate n satellites along each of the m planes:
-    for i in range(m):
-        generate_topology(n, i)
-    
-    connections = connect_satellites(l , n, m) # Establish appropriate connections between the satellites in the network.
-    print(m, n )
-    plot_topology(connections, m, l, n) # Visualize the topology of the network. 
+    # These varaibles are for the simulation
+    n_vals = [3,7,9,12,20,30,40,50,55,60,70,80,100,130]
+
+    # Simulations:
+    one_d_sim(n_vals)
+    # multi_d_sim(n_vals)
 
     
-    
 
+        
 if __name__ == '__main__':
     main()
