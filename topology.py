@@ -60,38 +60,11 @@ class Topology:
                 temp_sat = Sat(i+(n*plane),math.cos(math.radians(i*deg_inc)),math.sin(math.radians(i*deg_inc)),plane+1)
                 self.satellites.append(temp_sat)
 
-    def connect_satellites(self):
+    def connect_sats(self):
         ''' This function is used by the initializer to establish the connections between satellites and stores them in the connections adjacency matrix.
         The function assigns edges according to a specific probability as dictated by the gen_bond_prob function.
         '''
 
-        self.connections = [[0 for _ in range(len(self.satellites))] for _ in range(len(self.satellites))]
-
-        for i in range(self.m):
-
-        # Establish inter-satellite connections:
-            for sat in range(self.d):
-            # Right path from the source:
-                if(self.gen_bond_prob() != 0):
-                    self.connections[sat+self.n*i][sat+self.n *i+1] = 1
-
-            for sat in range(self.n-1,self.d, -1):
-                # Left path from the source:
-                if(self.gen_bond_prob() != 0):
-                    self.connections[sat+self.n*i][sat+self.n*i -1] = 1
-            
-            # Final edge to close the circle from the source:
-            if(self.gen_bond_prob() != 0):
-                self.connections[self.n*i][self.n*i + (self.n -1)] = 1 
-
-
-        # Establish intra satellite connections:
-        for sat in range(len(self.satellites)-self.n):
-            if(self.gen_bond_prob() != 0):
-                self.connections[sat][sat + self.n] = 1
-    
-
-    def connect_sats(self):
         self.connections = [[0 for _ in range(len(self.satellites))] for _ in range(len(self.satellites))]
         plane = -1
 
@@ -114,9 +87,9 @@ class Topology:
 
     def gen_bond_prob(self):
         ''' This function returns a 0 or a 1 under a certain probability. 
-        Currently, the probability that two neighbouring satellites are connected is 1/2.
+        Currently, the probability that two neighbouring satellites are connected is 6/7.
         '''
-        return rnd.choice([0,1,2,3,4,5,6])
+        return rnd.choice([0,1,2,3,4,5,6,7,8])
     
     def plot_topology(self):
         ''' This function plots the topology as a directed graph.'''

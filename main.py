@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-REP = 500 # This variable indicates how many repetition for each n value. 
+REP = 5000 # This variable indicates how many repetition for each n value. 
 
 def dfs_rec(connections, src, dst, visited):
     ''' This function is the implementation of the depth first seach graph traversal algorithm
@@ -27,7 +27,7 @@ def dfs_rec(connections, src, dst, visited):
 def traverse_topology(topology):
     ''' This function initializes the traversal of the topology from the source to the destination satellite.
     The function uses:
-    topology - 
+    topology - An object containing all the information needed to generate this instance of the topology.
     '''
     # The indecies that store the source and desteniation satellites.
     con_list = topology.connections
@@ -40,27 +40,40 @@ def traverse_topology(topology):
     else:
         return 0
 
-def one_d_sim(n_vals,m):
+def one_d_sim(n_vals):
+    ''' This function is used to generate the plots for the 1D case (message propagation along a single orbital plane).
+    This function uses:
+    n_vals - a list containing all the different values for the number of satellites along a single orbital plane.
+    '''
 
-    p = 5/6
+    p = 8/9 # The value of the probability of each ISL being connected. This value is according to topology.gen_bond_prob()
+    d_vals = [2] # A list containing the values of d, the distance between the source and destination satellites.
+
+    # The variables to hold results:
     values = 0
     results = []
     theory = []
 
-    for n in n_vals:
-        d = int(n/3)
-        values = 0
-        for _ in range(REP):
-            top = Topology(n,m,d)
-            values += traverse_topology(top)
-
-        results.append(values/REP)
-        theory.append((p**d) + (p**(n-d)) - (p**n))
-
     plt.figure(figsize=(8, 5))
-    plt.plot(n_vals, results, marker = 'o', label ='Simulation Results')
-    plt.plot(n_vals, theory, marker = 'x', label = 'Theoretical Results')
 
+    for val in d_vals:
+        for n in n_vals:
+            d = int(n/val)
+            values = 0
+            for _ in range(REP):
+                top = Topology(n,1,d)
+                values += traverse_topology(top)
+
+            results.append(values/REP)
+            theory.append((p**d) + (p**(n-d)) - (p**n))
+
+        
+        plt.plot(n_vals, results, marker = 'o', label =f'Simulation Results, d = n/{val}')
+        plt.plot(n_vals, theory, marker = 'x', label = f'Theoretical Results, d = n/{val}')
+        results = []
+        theory = []
+
+    
     plt.ylim(0, 1)
     plt.legend()
     plt.xlabel("Number of Satellites Along a Plane")
@@ -68,7 +81,11 @@ def one_d_sim(n_vals,m):
     plt.title("1D Message Delivery Probability vs. Number of Satellites Along a Plane")
     plt.show()
 
-def multi_d_sim(n_vals,m):
+def multi_d_sim(n_vals):
+    ''' This function is used to generate the plots for the 2D case (message propagation along a two orbital planes).
+    This function uses:
+    n_vals - a list containing all the different values for the number of satellites along a single orbital plane.
+    '''
 
     values = 0
     results = []
@@ -77,7 +94,7 @@ def multi_d_sim(n_vals,m):
         d = int(n/2)
         values = 0
         for _ in range(REP):
-            top = Topology(n,m,d)
+            top = Topology(n,2,d)
             values += traverse_topology(top)
 
         results.append(values/REP)
@@ -95,12 +112,12 @@ def multi_d_sim(n_vals,m):
 def main():
 
     # These varaibles are for the simulation
-    n_vals = [3,6,9,12,16,20,30,40,45,50,55,60]
-    m = 1
+    n_vals = [3,7,9,12,20,30,40,50,55,60,70,80,100,130]
 
     # Simulations:
-    one_d_sim(n_vals, 1)
-    multi_d_sim(n_vals, 2)
+    one_d_sim(n_vals)
+    # multi_d_sim(n_vals)
+
     
 
         
