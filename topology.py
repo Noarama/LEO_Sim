@@ -89,6 +89,7 @@ class Topology:
         ''' This function returns a 0 or a 1 under a certain probability. 
         Currently, the probability that two neighbouring satellites are connected is 6/7.
         '''
+        # return 1
         return rnd.choice([0,1,2,3,4,5,6,7,8])
     
     def plot_topology(self):

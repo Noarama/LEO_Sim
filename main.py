@@ -1,12 +1,13 @@
 # from sat import *
 from topology import *
+from theory import *
 import math
 import matplotlib.pyplot as plt
 
 import numpy as np
 
 
-REP = 5000 # This variable indicates how many repetition for each n value. 
+REP = 1500 # This variable indicates how many repetition for each n value. 
 
 def dfs_rec(connections, src, dst, visited):
     ''' This function is the implementation of the depth first seach graph traversal algorithm
@@ -52,7 +53,7 @@ def one_d_sim(n_vals):
     # The variables to hold results:
     values = 0
     results = []
-    theory = []
+    theory_results= []
 
     plt.figure(figsize=(8, 5))
 
@@ -65,13 +66,14 @@ def one_d_sim(n_vals):
                 values += traverse_topology(top)
 
             results.append(values/REP)
-            theory.append((p**d) + (p**(n-d)) - (p**n))
+            theory_results.append(one_d_prob(n,d,p))
 
         
         plt.plot(n_vals, results, marker = 'o', label =f'Simulation Results, d = n/{val}')
-        plt.plot(n_vals, theory, marker = 'x', label = f'Theoretical Results, d = n/{val}')
+        plt.plot(n_vals, theory_results, marker = 'x', label = f'Theoretical Results, d = n/{val}')
         results = []
-        theory = []
+        theory_results= []
+        
 
     
     plt.ylim(0, 1)
@@ -86,21 +88,30 @@ def multi_d_sim(n_vals):
     This function uses:
     n_vals - a list containing all the different values for the number of satellites along a single orbital plane.
     '''
-
     values = 0
     results = []
+    theory_results= []
+    p = 8/9
 
     for n in n_vals:
-        d = int(n/2)
+        d = int(n/4)
         values = 0
         for _ in range(REP):
             top = Topology(n,2,d)
+
+            # Set S and D to be disconnected
+            # top.connections[0][n] = 0 
+            # top.connections[d][n + d] = 0
+
             values += traverse_topology(top)
 
+        theory_results.append(two_d_prob(n,d,p))
         results.append(values/REP)
 
+    print(theory_results)
     plt.figure(figsize=(8, 5))
     plt.plot(n_vals, results, marker = 'o', label ='Simulation Results')
+    plt.plot(n_vals, theory_results, marker = 'o', label ='Theory Results')
 
     plt.ylim(0, 1)
     plt.legend()
@@ -112,11 +123,15 @@ def multi_d_sim(n_vals):
 def main():
 
     # These varaibles are for the simulation
-    n_vals = [3,7,9,12,20,30,40,50,55,60,70,80,100,130]
+    # n_vals = [3,7,9,12,20,30,40,50,60,80,100] 
+    n_vals = [3,5,8,10,20, 30]
 
     # Simulations:
-    one_d_sim(n_vals)
-    # multi_d_sim(n_vals)
+    # one_d_sim(n_vals)
+    multi_d_sim(n_vals)
+
+    # top = Topology(5,2,2)
+    # top.plot_topology()
 
     
 
