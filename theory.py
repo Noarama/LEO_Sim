@@ -4,11 +4,10 @@ def one_d_prob(n,d,p):
 
 
 def ladder_connectivity(x,p):
-
     if x == 0:
         return p
-    
-    return p**((p**x) + ladder_connectivity(x-1, p) - (p**x) * theta(p,x, 0, -1,-1))
+
+    return p*((p**x) + ladder_connectivity(x-1, p) - (p**x) * theta(p, x, 0, -1,-1))
 
 
 def theta(p,x, flag, small, small_x):
@@ -40,7 +39,8 @@ def theta(p,x, flag, small, small_x):
         return small
 
     # This is the recursion itself 
-    return (p* (p + theta(p,x-1, flag, small, small_x)-p*theta(p, x-1, flag, small, small_x)))
+    return (p* (p + (1-p)*theta(p,x-1, flag, small, small_x)))
+
 
 
 def case_one(CCW_x, CW_x, p):
@@ -55,11 +55,12 @@ def case_one(CCW_x, CW_x, p):
     CW = 0
 
     if CCW_x > 1:
-        CCW = (p**CCW_x)*ladder_connectivity(CCW_x-2, p)
+        CCW = (p**2) * ladder_connectivity(CCW_x - 2, p)
     
     if CW_x > 1:
-        CW = (p**CW_x)*ladder_connectivity(CW_x-2, p)
-        
+        CW = (p**2) * ladder_connectivity(CW_x - 2, p)
+
+
     return CCW, CW 
 
 
@@ -116,8 +117,8 @@ def case_four(CCW_x, CW_x, p, CCW_two, CW_two):
     CCW_two - the value of CCW in case 2,
     CW_two - the value of CW in case 2.
     '''
-    CCW = 2**p - (p**2)
-    CW = 2**p - (p**2)
+    CCW = 2*p - (p**2)
+    CW = 2*p - (p**2)
     if CCW_x > 1 and CW_x > 1:
         # If both are not 1
         if CCW_x <= CW_x:
@@ -153,20 +154,27 @@ def two_d_prob(n,d,p):
 
     CCW_x = d 
     CW_x = n - d 
-    print(CCW_x, CW_x)
-    CW_one, CCW_one = case_one(CCW_x, CW_x, p)
-    CW_two, CCW_two = case_two_three(CCW_x, CW_x, p, CCW_one, CW_one)
-    CW_four, CCW_four = case_four(CCW_x, CW_x, p, CCW_two, CW_two)
+    # print("sizes:" , CW_x, CCW_x)
+
+    CCW_one, CW_one = case_one(CCW_x, CW_x, p)
+    CCW_two, CW_two = case_two_three(CCW_x, CW_x, p, CCW_one, CW_one)
+    CCW_four, CW_four = case_four(CCW_x, CW_x, p, CCW_two, CW_two)
 
     if CCW_x == 0:
         CCW_one = 0
         CCW_two = 0
         CCW_four = 0
     
-    if CW_x == 0:
-        CW_one = 0
-        CW_two = 0
-        CW_four = 0
-        
+    # if CW_x == 0:
+    #     CW_one = 1
+    #     CW_two = 1
+    #     CW_four = 1
+    
+    # print("Values:")
+    # print(CW_one, CCW_one)
+    # print(CW_two, CCW_two)
+    # print(CW_four, CCW_four)
+
+    # return (CW_one + CCW_one - CW_one * CCW_one)
 
     return ((1-p)**2)*(CW_one+CCW_one - CW_one*CCW_one) + 2*(p*(1-p))*(CW_two+ CCW_two - CW_two*CCW_two) + (p**2)*(CW_four + CCW_four - CW_four * CCW_four)
