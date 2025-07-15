@@ -3,9 +3,10 @@ from topology import *
 from theory import *
 import math
 import matplotlib.pyplot as plt
-
 import numpy as np
+from decimal import Decimal, getcontext
 
+getcontext().prec = 50
 
 REP = 3000 # This variable indicates how many repetition for each n value. 
 
@@ -39,7 +40,6 @@ def traverse_topology(topology):
     visited = [False for _ in range(len(topology.satellites))] # Initialize a visited list where all values are false. 
     dfs_rec(con_list, 0, topology.n *(topology.m-1) + topology.d, visited)
 
-    # print(visited)
     if visited[topology.n *(topology.m-1) + topology.d]:
         return 1
     
@@ -97,26 +97,21 @@ def multi_d_sim(n_vals):
     results = []
     theory_results= []
     p = 8/9
-    # print("prob" , p)
 
     for n in n_vals:
-        d = int(n/2)
-        values = 0
+        d = int(n/4)
+        values = Decimal(str(0))
+        one = Decimal(str(1))
+
         for _ in range(REP):
             top = Topology(n,2,d)
-
-            # Set S and D to be disconnected
-            # top.connections[0][n] = 0
-            # top.connections[d][n + d] = 0
-
-            # top.plot_topology()
-
             values += traverse_topology(top)
+            
 
         theory_results.append(two_d_prob(n,d,p))
-        results.append(values/REP)
+        results.append(Decimal(str(values))/Decimal(str(REP)))
 
-    print(results)
+
     plt.figure(figsize=(8, 5))
     plt.plot(n_vals, results, marker = 'o', label ='Simulation Results')
     plt.plot(n_vals, theory_results, marker = 'o', label ='Theory Results')
@@ -131,17 +126,11 @@ def multi_d_sim(n_vals):
 def main():
 
     # These varaibles are for the simulation
-    n_vals = [10,12,20,30,40,50,60,80,100,120] 
-    # n_vals = [3,5,8,10,12,13,15,20, 25,30]
-    # n_vals = [10]
+    n_vals = [10,20,30,40,50,60,80,100,120,150] 
 
     # Simulations:
-    # one_d_sim(n_vals)
+    one_d_sim(n_vals)
     multi_d_sim(n_vals)
-
-    # top = Topology(5,2,2)
-    # top.plot_topology()
-
     
 
         
