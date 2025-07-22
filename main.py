@@ -1,28 +1,34 @@
 # from sat import *
 from topology import *
+from theory import *
 import math
 import matplotlib.pyplot as plt
-
 import numpy as np
+from decimal import Decimal, getcontext
 
+getcontext().prec = 50
 
-REP = 5000 # This variable indicates how many repetition for each n value. 
+REP = 3000 # This variable indicates how many repetition for each n value. 
 
-def dfs_rec(connections, src, dst, visited):
-    ''' This function is the implementation of the depth first seach graph traversal algorithm
-    The function uses:
-    connections - the adjacency matrix of the graph,
-    src - the current satellite we are in. Initially this is the source satellite, 
-    dst - the index of the destination satellite,
-    visited - a list that keeps track of which satellites have been visited.
+def dfs_rec(connections, cur, dst, visited):
     '''
+    Depth-First Search traversal from cur to dst using recursion.
+    connections - adjacency matrix of the graph,
+    cur - the current node,
+    dst - the destination node,
+    visited - list of visited nodes.
+    '''
+    visited[cur] = True
 
-    visited[src] = True
-    if (src == dst):
+    if cur == dst:
         return True
-    for i in range(len(connections[src])): 
-        if ((connections[src][i] == 1) and visited[i] == False):
-            return dfs_rec(connections, i, dst, visited)
+
+    for i in range(len(connections[cur])):
+        if connections[cur][i] == 1 and not visited[i]:
+            if dfs_rec(connections, i, dst, visited):
+                return True  # Only return when a valid path is found
+
+    return False  # If no path from cur leads to dst
      
 def traverse_topology(topology):
     ''' This function initializes the traversal of the topology from the source to the destination satellite.
@@ -52,7 +58,7 @@ def one_d_sim(n_vals):
     # The variables to hold results:
     values = 0
     results = []
-    theory = []
+    theory_results= []
 
     plt.figure(figsize=(8, 5))
 
@@ -65,13 +71,14 @@ def one_d_sim(n_vals):
                 values += traverse_topology(top)
 
             results.append(values/REP)
-            theory.append((p**d) + (p**(n-d)) - (p**n))
+            theory_results.append(one_d_prob(n,d,p))
 
         
         plt.plot(n_vals, results, marker = 'o', label =f'Simulation Results, d = n/{val}')
-        plt.plot(n_vals, theory, marker = 'x', label = f'Theoretical Results, d = n/{val}')
+        plt.plot(n_vals, theory_results, marker = 'x', label = f'Theoretical Results, d = n/{val}')
         results = []
-        theory = []
+        theory_results= []
+        
 
     
     plt.ylim(0, 1)
@@ -86,21 +93,28 @@ def multi_d_sim(n_vals):
     This function uses:
     n_vals - a list containing all the different values for the number of satellites along a single orbital plane.
     '''
-
     values = 0
     results = []
+    theory_results= []
+    p = 8/9
 
     for n in n_vals:
-        d = int(n/2)
-        values = 0
+        d = int(n/4)
+        values = Decimal(str(0))
+        one = Decimal(str(1))
+
         for _ in range(REP):
             top = Topology(n,2,d)
             values += traverse_topology(top)
+            
+        top.plot_topology()
+        theory_results.append(two_d_prob(n,d,p))
+        results.append(Decimal(str(values))/Decimal(str(REP)))
 
-        results.append(values/REP)
 
     plt.figure(figsize=(8, 5))
     plt.plot(n_vals, results, marker = 'o', label ='Simulation Results')
+    plt.plot(n_vals, theory_results, marker = 'o', label ='Theory Results')
 
     plt.ylim(0, 1)
     plt.legend()
@@ -112,12 +126,12 @@ def multi_d_sim(n_vals):
 def main():
 
     # These varaibles are for the simulation
-    n_vals = [3,7,9,12,20,30,40,50,55,60,70,80,100,130]
+    n_vals = [10,20,30,40,50,60,80,100,120,150] 
+    n_vals = [6]
 
     # Simulations:
-    one_d_sim(n_vals)
-    # multi_d_sim(n_vals)
-
+    # one_d_sim(n_vals)
+    multi_d_sim(n_vals)
     
 
         

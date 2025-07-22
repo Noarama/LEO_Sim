@@ -3,6 +3,8 @@ import math
 import matplotlib.pyplot as plt
 import random as rnd
 
+rnd.seed(1)
+
 class Sat:
 
     def __init__(self, sat_num, x, y, z):
@@ -69,22 +71,60 @@ class Topology:
         plane = -1
 
         for sat in range(len(self.connections)):
-            if(self.gen_bond_prob() != 0):
-                if (sat % self.n == 0):
-                    plane += 1
+
+            # This block is for the source or satellites parallel to source 
+            if (sat % self.n == 0):
+                plane +=1
+                if(sat != self.n * (self.m-1)):
+                    # Then this satellite needs an inter-plane link
+                    if(self.gen_bond_prob() != 0):
+                        self.connections[sat][sat+self.n] = 1
+
+                # Edge from source to neighbour on the right (counter-clockwise)
+                if(self.gen_bond_prob() != 0):
+                        self.connections[sat][sat+1] = 1
+
+                # Edge from source to neighbour on the left (clockwise)
+                if(self.gen_bond_prob() != 0):
+                        self.connections[sat][sat + (self.n - 1)] = 1
+
+
+            # This block is for intermediate satellites in the clockwise ladder
+            elif(sat > (plane * self.n + self.d)):
+
+                # Edge from the satellite to neighbour along the same plane
+                if(self.gen_bond_prob() != 0 and (sat+1) % (self.n) != 0):
+                    self.connections[sat+1][sat] = 1
+
+                # Inter-plane edge
+                if(self.gen_bond_prob() != 0 and sat < ((self.m -1)* self.n)):
+                    self.connections[sat][sat+(self.n)] = 1
+                    
+
+            # This block is for intermediate satellites in the counter-clockwise ladder
+            elif (sat < (plane * self.n + self.d)):
+
+                # Edge from satellite to neighbour along the same plane
+                if(self.gen_bond_prob() != 0):
                     self.connections[sat][sat+1] = 1
-                    self.connections[sat][sat + self.n -1] = 1
                 
-                elif (sat < (plane * self.n + self.d)):
-                    self.connections[sat][sat+1] = 1
-
-                elif(sat > (plane * self.n + self.d)):
-                    self.connections[sat][sat-1] = 1
-
-                if(sat < (self.m-1) * self.n):
-                    self.connections[sat][sat+self.n] = 1
+                # Inter-plane edge
+                if(self.gen_bond_prob() != 0 and sat < ((self.m -1)* self.n)):
+                    self.connections[sat][sat+(self.n)] = 1
 
 
+            # This block is for the destination or satellites parallel to the destination 
+            elif (sat == (plane * self.n + self.d)):
+
+                # Edge from satellite to neighbour along the same plane
+                if(self.gen_bond_prob() != 0):
+                    self.connections[sat+1][sat] = 1
+
+                # Inter-plane edge
+                if(self.gen_bond_prob() != 0 and sat < ((self.m -1)* self.n)):
+                    self.connections[sat][sat+(self.n)] = 1
+                
+            
     def gen_bond_prob(self):
         ''' This function returns a 0 or a 1 under a certain probability. 
         Currently, the probability that two neighbouring satellites are connected is 6/7.
