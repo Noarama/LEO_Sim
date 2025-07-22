@@ -107,7 +107,7 @@ def multi_d_sim(n_vals):
             top = Topology(n,2,d)
             values += traverse_topology(top)
             
-
+        top.plot_topology()
         theory_results.append(two_d_prob(n,d,p))
         results.append(Decimal(str(values))/Decimal(str(REP)))
 
@@ -127,9 +127,10 @@ def main():
 
     # These varaibles are for the simulation
     n_vals = [10,20,30,40,50,60,80,100,120,150] 
+    n_vals = [6]
 
     # Simulations:
-    one_d_sim(n_vals)
+    # one_d_sim(n_vals)
     multi_d_sim(n_vals)
     
 

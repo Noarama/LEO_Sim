@@ -71,7 +71,6 @@ class Topology:
         plane = -1
 
         for sat in range(len(self.connections)):
-            # print((plane * self.n + self.d))
 
             # This block is for the source or satellites parallel to source 
             if (sat % self.n == 0):
@@ -114,8 +113,6 @@ class Topology:
                     self.connections[sat][sat+(self.n)] = 1
 
 
-
-
             # This block is for the destination or satellites parallel to the destination 
             elif (sat == (plane * self.n + self.d)):
 
@@ -127,36 +124,12 @@ class Topology:
                 if(self.gen_bond_prob() != 0 and sat < ((self.m -1)* self.n)):
                     self.connections[sat][sat+(self.n)] = 1
                 
-        #     if(self.gen_bond_prob() != 0):
-        #         # If success (according to the probability), asign edges
-
-        #         if (sat % self.n == 0): # This block is for source or parallel to source satellites.
-        #             plane += 1
-        #             self.connections[sat][sat+1] = 1
-        #             self.connections[sat][sat + self.n -1] = 1
-                
-        #         elif (sat < (plane * self.n + self.d)):
-        #             self.connections[sat][sat+1] = 1
-
-        #         elif(sat > (plane * self.n + self.d)):
-        #             self.connections[sat][sat-1] = 1
-
-        #         if(sat < (self.m-1) * self.n):
-        #             self.connections[sat][sat+self.n] = 1
-
-        
-        # for sat in range(len(self.connections)):
-        #     if(sat % self.n == 0 and self.d == 0):
-        #         self.connections[sat+1][sat] = 0
-        #         if(self.d == 0):
-        #             self.connections[sat][sat+1] = 0
             
     def gen_bond_prob(self):
         ''' This function returns a 0 or a 1 under a certain probability. 
         Currently, the probability that two neighbouring satellites are connected is 6/7.
         '''
         return rnd.choice([0,1,2,3,4,5,6,7,8])
-        # return 1
     
     def plot_topology(self):
         ''' This function plots the topology as a directed graph.'''
